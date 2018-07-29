@@ -13,9 +13,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.snj.letschat.utils.CheckNet
 import com.snj.letschat.utils.SharedPrefConfigUtils
+import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : AppCompatActivity(),
         GoogleApiClient.OnConnectionFailedListener {
@@ -27,14 +29,14 @@ class LoginActivity : AppCompatActivity(),
 
     var mGoogleApiClient: GoogleApiClient? = null
     var mAuth: FirebaseAuth? = null
-    @BindView(R.id.gmail_signin_button2)
-    internal var btnGmailSignIn: Button? = null
+
     val RC_SIGN_IN = 9001
-    val TAG: String = localClassName;
+    val TAG: String = javaClass.name
 
 //    var mCallbackManager: CallbackManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        FirebaseApp.initializeApp(this)
         super.onCreate(savedInstanceState)
         FirebaseAuth.getInstance().signOut()
         setContentView(R.layout.activity_login)
@@ -45,7 +47,9 @@ class LoginActivity : AppCompatActivity(),
         mGoogleApiClient?.connect()
 
         mAuth = FirebaseAuth.getInstance()
-        btnGmailSignIn?.setOnClickListener(View.OnClickListener { submit() }
+        gmail_signin_button2?.setOnClickListener(View.OnClickListener {
+            submit()
+        }
         )
 
     }
@@ -123,7 +127,6 @@ class LoginActivity : AppCompatActivity(),
 
         //appDatabase = AppDatabaseSingleton.getInstance(this)
         var et = SharedPrefConfigUtils.getSharedPreference(this).edit()
-
 
 
         //et.putLong(SharedPrefConfigUtils.USER_ID, user1[0].getUid())
