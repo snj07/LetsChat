@@ -90,12 +90,12 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         val storageRef = storage.getReferenceFromUrl("gs://friendlychat-ee637.appspot.com").child("images")
         if (requestCode == IMAGE_GALLERY_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
-                val selectedImageUri = data.data
+                val selectedImageUri = data!!.data
                 if (selectedImageUri != null) {
                     sendFileFirebase(storageRef, selectedImageUri)
                 } else {
@@ -111,11 +111,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                     //IS NULL
                 }
             }
-        } else if (requestCode == PLACE_PICKER_REQUEST) {
+        } else if (requestCode == PLACE_PICKER_REQUEST ) {
             if (resultCode == Activity.RESULT_OK) {
                 val place = PlacePicker.getPlace(this, data)
                 if (place != null) {
-                    val latLng = place!!.latLng
+                    val latLng = place?.latLng
                     val mapModel = com.snj.letschat.model.Map(latitude = "$latLng.latitude", longitude = "$latLng.longitude")
                     val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = mapModel, file = null, id = null, messgage = null)
                     mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
@@ -171,9 +171,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
 
-    /**
-     * Envia o arvquivo para o firebase
-     */
 
     private fun sendFileFirebase(storageReference: StorageReference?, file: Uri) {
         if (storageReference != null) {
@@ -189,8 +186,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                             imageGalleryRef.downloadUrl.addOnSuccessListener { e ->
                                 run {
                                     Log.e("Upload..", "onSuccess sendFileFirebase")
-                                    val downloadUrl = e
-                                    val fileModel = File("img", downloadUrl.toString(), name, "")
+                                    val fileModel = File("img", e.toString(), name, "")
                                     val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = null, file = fileModel, id = null, messgage = null)
                                     mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
                                     Log.d("File..", fileModel.toString())
@@ -246,9 +242,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
 
-    /**
-     * Obter local do usuario
-     */
     private fun locationPlacesIntent() {
         try {
             val builder = PlacePicker.IntentBuilder()
@@ -261,9 +254,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     }
 
-    /**
-     * Enviar foto tirada pela camera
-     */
     private fun photoCameraIntent() {
         val nomeFoto = DateFormat.format("yyyy-MM-dd_hhmmss", Date()).toString()
         filePathImageCamera = java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), nomeFoto + "camera.jpg")
@@ -275,9 +265,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         startActivityForResult(it, IMAGE_CAMERA_REQUEST)
     }
 
-    /**
-     * Enviar foto pela galeria
-     */
     private fun photoGalleryIntent() {
         val intent = Intent()
         intent.type = "image/*"
@@ -285,13 +272,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture_title)), IMAGE_GALLERY_REQUEST)
     }
 
-    /**
-     * Enviar msg de texto simples para chat
-     */
+   
     private fun sendMessageFirebase() {
         val model = Message(user = userModel, messgage = edMessage!!.text.toString(), timeStamp = "${Calendar.getInstance().getTime().getTime()}", file = null, id = null, map = null)
         mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(model)
-        edMessage!!.setText(null)
+        edMessage!!.setText("")
     }
 
 

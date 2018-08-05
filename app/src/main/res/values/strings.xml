@@ -7,4 +7,5 @@
     <string name="sendPhotoGallery">Send Photo Gallery</string>
     <string name="sendLocation">Send Location</string>
     <string name="sign_out">Signout</string>
+    <string name="api_key_google_places">AIzaSyC0gCg_79u_LUtIp6s_VgA-8hJv6A0o5Vg</string>
 </resources>
