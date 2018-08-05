@@ -272,7 +272,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture_title)), IMAGE_GALLERY_REQUEST)
     }
 
-   
+
     private fun sendMessageFirebase() {
         val model = Message(user = userModel, messgage = edMessage!!.text.toString(), timeStamp = "${Calendar.getInstance().getTime().getTime()}", file = null, id = null, map = null)
         mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(model)
