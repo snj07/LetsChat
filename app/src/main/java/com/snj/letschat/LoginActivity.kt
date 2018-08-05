@@ -5,19 +5,21 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import butterknife.BindView
 import butterknife.ButterKnife
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.snj.letschat.utils.CheckNet
 import com.snj.letschat.utils.SharedPrefConfigUtils
 import kotlinx.android.synthetic.main.activity_login.*
+
 
 class LoginActivity : AppCompatActivity(),
         GoogleApiClient.OnConnectionFailedListener {
@@ -25,6 +27,7 @@ class LoginActivity : AppCompatActivity(),
     override fun onConnectionFailed(p0: ConnectionResult) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
 
 
     var mGoogleApiClient: GoogleApiClient? = null
@@ -42,11 +45,12 @@ class LoginActivity : AppCompatActivity(),
         setContentView(R.layout.activity_login)
         ButterKnife.bind(this)
 
-        val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build()
+        val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().requestIdToken(getString(R.string.default_web_client_id)).build()
         mGoogleApiClient = GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions).build()
         mGoogleApiClient?.connect()
 
         mAuth = FirebaseAuth.getInstance()
+
         gmail_signin_button2?.setOnClickListener(View.OnClickListener {
             submit()
         }
@@ -106,6 +110,19 @@ class LoginActivity : AppCompatActivity(),
             var personPhotoUrl = ""
             if (acct.photoUrl != null)
                 personPhotoUrl = acct.photoUrl!!.toString()
+            val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
+            Log.d("token",acct.idToken)
+            mAuth!!.signInWithCredential(credential)
+                    .addOnCompleteListener(this, OnCompleteListener<AuthResult> { task ->
+                        Log.d("TAG ", "signInWithCredential:onComplete:" + task.isSuccessful)
+                        if (!task.isSuccessful) {
+                            Log.w("TAG ", "signInWithCredential", task.exception)
+//                        Util.initToast(this@LoginActivity, "Authentication failed")
+                        } else {
+                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            finish()
+                        }
+                    })
             handleSignInResult(name, email, personPhotoUrl)
 
 
@@ -135,6 +152,7 @@ class LoginActivity : AppCompatActivity(),
         et.putString(SharedPrefConfigUtils.USER_IMAGE, personPhotoUrl)
         Log.d(TAG, SharedPrefConfigUtils.USER_EMAIL + "")
         et.commit()
+
         startActivity(Intent(this, MainActivity::class.java))
         finish()
 

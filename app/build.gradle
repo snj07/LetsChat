@@ -37,11 +37,19 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation 'com.google.firebase:firebase-auth:16.0.2'
     implementation 'com.google.firebase:firebase-config:16.0.0'
-    implementation 'com.firebaseui:firebase-ui-database:4.1.0'
+    implementation 'com.firebaseui:firebase-ui-database:3.3.1'
+    implementation 'com.google.firebase:firebase-storage:16.0.1'
+    implementation 'com.google.android.gms:play-services-places:15.0.1'
+
     //
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
+    //glide
+    implementation 'com.github.bumptech.glide:glide:4.7.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
     //emoji
     implementation 'com.github.hani-momanii:SuperNova-Emoji:1.1'
+    //chat message view
+    implementation 'me.himanshusoni.chatmessageview:chat-message-view:1.0.7'
     //butterknife
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
