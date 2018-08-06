@@ -42,7 +42,7 @@ dependencies {
     implementation 'com.firebaseui:firebase-ui-database:3.3.1'
     implementation 'com.google.firebase:firebase-storage:16.0.1'
     implementation 'com.google.android.gms:play-services-places:15.0.1'
-    implementation "com.google.android.gms:play-services-location:$googlePlayVersion"
+    implementation "com.google.android.gms:play-services-location:15.0.1"
 
     //
     implementation 'com.google.android.gms:play-services-auth:15.0.1'

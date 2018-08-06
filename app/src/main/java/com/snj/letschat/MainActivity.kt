@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                     //IS NULL
                 }
             }
-        } else if (requestCode == PLACE_PICKER_REQUEST ) {
+        } else if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 val place = PlacePicker.getPlace(this, data)
                 if (place != null) {
@@ -169,7 +169,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
         startActivity(intent)
     }
-
 
 
     private fun sendFileFirebase(storageReference: StorageReference?, file: Uri) {
