@@ -287,7 +287,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 //                        .setQuery(teamQuery, Message::class.java)
                         .setLifecycleOwner(this)
                         .build()
-        val firebaseAdapter = ChatFirebaseRecycleAdapter(this, options, mFirebaseDatabaseReference!!.child(CHAT_REFERENCE), userModel!!.name!!)
+        val firebaseAdapter = ChatFirebaseRecycleAdapter(this, options,  userModel!!.email!!,userModel!!.name!!)
         firebaseAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 super.onItemRangeInserted(positionStart, itemCount)
@@ -311,7 +311,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
-            userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString())
+            userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString(),mFirebaseUser?.email)
             lerMessagensFirebase()
         }
     }

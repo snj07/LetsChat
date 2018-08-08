@@ -24,11 +24,12 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
     val SEND_IMG_MSG = 2
     val RECV_IMG_MSG = 3
     var userName: String
+    var email: String
     var context: Context
 
-    constructor(context: Context, fbRecycleOption: FirebaseRecyclerOptions<Message>, dbRef: DatabaseReference, username: String) : super(fbRecycleOption) {
-        this.userName = username;
-        var ss: FirebaseRecyclerOptions<DatabaseReference>
+    constructor(context: Context, fbRecycleOption: FirebaseRecyclerOptions<Message>, email: String, username: String) : super(fbRecycleOption) {
+        this.userName = username
+        this.email = email
         this.context = context
     }
 
@@ -36,10 +37,10 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
         Log.d("ViewType","$viewType--")
 
         var view: View = when (viewType) {
-            RECV_MSG -> LayoutInflater.from(parent.getContext()).inflate(R.layout.item_receive_messge, parent, false)
-            SEND_MSG -> LayoutInflater.from(parent.getContext()).inflate(R.layout.item_send_messge, parent, false)
-            SEND_IMG_MSG -> LayoutInflater.from(parent.getContext()).inflate(R.layout.item_send_img, parent, false)
-            else -> LayoutInflater.from(parent.getContext()).inflate(R.layout.item_receive_img, parent, false)
+            RECV_MSG -> LayoutInflater.from(parent.context).inflate(R.layout.item_receive_messge, parent, false)
+            SEND_MSG -> LayoutInflater.from(parent.context).inflate(R.layout.item_send_messge, parent, false)
+            SEND_IMG_MSG -> LayoutInflater.from(parent.context).inflate(R.layout.item_send_img, parent, false)
+            else -> LayoutInflater.from(parent.context).inflate(R.layout.item_receive_img, parent, false)
         }
 
         return ChatViewHolder(view)
@@ -49,18 +50,18 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
     override fun getItemViewType(position: Int): Int {
         var msg = getItem(position)
         return when {
-            msg.map != null -> if (msg.user!!.name == userName) {
+            msg.map != null -> if (msg.user!!.email == email) {
                 SEND_IMG_MSG
             } else {
                 RECV_IMG_MSG
             }
-            msg.file != null -> if (msg.file!!.type == "img" && msg.user!!.name == userName) {
+            msg.file != null -> if (msg.file!!.type == "img" && msg.user!!.email == email) {
                 Log.d("Adapter",userName)
                 SEND_IMG_MSG
             } else {
                 RECV_IMG_MSG
             }
-            msg.user!!.name == userName -> SEND_MSG
+            msg.user!!.email == email -> SEND_MSG
             else -> RECV_MSG
         }
     }
@@ -71,12 +72,15 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             holder.txtMessage!!.text = model.messgage
         }
         holder.tvTimestamp.text = model.timeStamp
+        if(holder.tvLocation!=null)
         holder.tvLocation!!.visibility = View.GONE
         if (model.file != null) {
+            if(holder.tvLocation!=null)
              holder.tvLocation!!.visibility = View.GONE
             holder.setIvChatPhoto(model.file.url)
         } else if (model.map != null) {
             holder.setIvChatPhoto(local(model.map!!.latitude, model.map!!.longitude))
+            if(holder.tvLocation!=null)
               holder.tvLocation!!.visibility = View.VISIBLE
         }
     }
