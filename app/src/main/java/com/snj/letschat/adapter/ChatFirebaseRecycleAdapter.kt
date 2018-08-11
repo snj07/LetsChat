@@ -1,6 +1,8 @@
 package com.snj.letschat.adapter
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,15 +11,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
-import com.google.firebase.database.DatabaseReference
+import com.snj.letschat.FullScreenActivity
 import com.snj.letschat.R
 import com.snj.letschat.model.Message
 import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView
 
 
-class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebaseRecycleAdapter.ChatViewHolder> {
+class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebaseRecycleAdapter.ChatViewHolder>{
+
+
 
     val SEND_MSG = 0
     val RECV_MSG = 1
@@ -34,7 +39,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        Log.d("ViewType","$viewType--")
+        Log.d("ViewType", "$viewType--")
 
         var view: View = when (viewType) {
             RECV_MSG -> LayoutInflater.from(parent.context).inflate(R.layout.item_receive_messge, parent, false)
@@ -56,7 +61,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
                 RECV_IMG_MSG
             }
             msg.file != null -> if (msg.file!!.type == "img" && msg.user!!.email == email) {
-                Log.d("Adapter",userName)
+                Log.d("Adapter", userName)
                 SEND_IMG_MSG
             } else {
                 RECV_IMG_MSG
@@ -72,16 +77,16 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             holder.txtMessage!!.text = model.messgage
         }
         holder.tvTimestamp.text = model.timeStamp
-        if(holder.tvLocation!=null)
-        holder.tvLocation!!.visibility = View.GONE
+        if (holder.tvLocation != null)
+            holder.tvLocation!!.visibility = View.GONE
         if (model.file != null) {
-            if(holder.tvLocation!=null)
-             holder.tvLocation!!.visibility = View.GONE
+            if (holder.tvLocation != null)
+                holder.tvLocation!!.visibility = View.GONE
             holder.setIvChatPhoto(model.file.url)
         } else if (model.map != null) {
             holder.setIvChatPhoto(local(model.map!!.latitude, model.map!!.longitude))
-            if(holder.tvLocation!=null)
-              holder.tvLocation!!.visibility = View.VISIBLE
+            if (holder.tvLocation != null)
+                holder.tvLocation!!.visibility = View.VISIBLE
         }
     }
 
@@ -89,7 +94,17 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
         return "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeFinal,$longitudeFinal&zoom=18&size=280x280&markers=color:red|$latitudeFinal,$longitudeFinal"
     }
 
-    inner class ChatViewHolder : RecyclerView.ViewHolder {
+    inner class ChatViewHolder : RecyclerView.ViewHolder, View.OnClickListener {
+        override fun onClick(p0: View?) {
+            val position = adapterPosition
+            val model = getItem(position)
+            if (model.map != null) {
+                clickImageMapChat(position, model.map?.latitude!!, model.map?.longitude!!)
+            } else {
+                clickImageChat(position, model.user?.name!!, model.user.photo!!, model.file!!.url)
+            }
+        }
+
         var tvTimestamp: TextView
         var tvLocation: TextView?
         var txtMessage: EmojiconTextView?
@@ -109,6 +124,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             //  Glide.with(ivUser.context).load(urlPhotoUser).centerCrop().transform(CircleTransform(ivUser.context)).override(40, 40).into(ivUser)
             Glide.with(context)
                     .load(urlPhotoUser)
+                    .apply(RequestOptions().centerCrop())
                     .into(ivUser!!)
         }
 
@@ -118,8 +134,23 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
                     .load(url)
                     .into(ivChatPhoto!!)
 
-//            ivChatPhoto.setOnClickListener(this)
+            ivChatPhoto!!.setOnClickListener(this)
         }
+
+        fun clickImageMapChat(position: Int, latitude: String, longitude: String) {
+            val uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude, longitude, latitude, longitude)
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+            context.startActivity(intent)
+        }
+
+        fun clickImageChat(position: Int, nameUser: String, urlPhotoUser: String, urlPhotoClick: String) {
+            val intent = Intent(context, FullScreenActivity::class.java)
+            intent.putExtra("nameUser", nameUser)
+            intent.putExtra("urlPhotoUser", urlPhotoUser)
+            intent.putExtra("urlPhotoClick", urlPhotoClick)
+            context.startActivity(intent)
+        }
+
     }
 
 }

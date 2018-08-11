@@ -2,10 +2,10 @@ package com.snj.letschat
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import butterknife.ButterKnife
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
@@ -27,14 +27,14 @@ class LoginActivity : AppCompatActivity(),
     override fun onConnectionFailed(p0: ConnectionResult) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+    companion object {
+        const val RC_SIGN_IN : Int = 9001
+        val TAG: String = "${LoginActivity::class.java.name}"
+    }
 
+    private var mGoogleApiClient: GoogleApiClient? = null
+    private var mAuth: FirebaseAuth? = null
 
-
-    var mGoogleApiClient: GoogleApiClient? = null
-    var mAuth: FirebaseAuth? = null
-
-    val RC_SIGN_IN = 9001
-    val TAG: String = javaClass.name
 
 //    var mCallbackManager: CallbackManager? = null
 
@@ -43,7 +43,6 @@ class LoginActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         FirebaseAuth.getInstance().signOut()
         setContentView(R.layout.activity_login)
-        ButterKnife.bind(this)
 
         val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().requestIdToken(getString(R.string.default_web_client_id)).build()
         mGoogleApiClient = GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions).build()
@@ -53,17 +52,15 @@ class LoginActivity : AppCompatActivity(),
 
         gmail_signin_button2?.setOnClickListener(View.OnClickListener {
             submit()
-        }
-        )
+        })
 
     }
 
-    internal fun submit() {
+    private fun submit() {
         if (CheckNet.isOnline(applicationContext)) {
             signIn()
         } else {
-            // showSnackbar(resources.getString(R.string.no_internet))
-
+            showSnackbar(resources.getString(R.string.no_internet))
         }
     }
 
@@ -82,16 +79,13 @@ class LoginActivity : AppCompatActivity(),
 
                 val result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
                 handleGoogle(result)
-                // Log.d(TAG, "onConnectionFailed: --- " + result.status.toString())
+                Log.d(TAG, "onConnectionFailed: --- " + result.status.toString())
             } else {
-
                 //facebook login
                 //  mCallbackManager.onActivityResult(requestCode, resultCode, data)
             }
         } catch (e: Exception) {
-
-            //  showSnackbar("Error in login!")
-
+            showSnackbar(resources.getString(R.string.error_in_login))
             Log.d("error", e.localizedMessage)
         }
 
@@ -111,13 +105,13 @@ class LoginActivity : AppCompatActivity(),
             if (acct.photoUrl != null)
                 personPhotoUrl = acct.photoUrl!!.toString()
             val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
-            Log.d("token",acct.idToken)
+            Log.d("token", acct.idToken)
             mAuth!!.signInWithCredential(credential)
                     .addOnCompleteListener(this, OnCompleteListener<AuthResult> { task ->
                         Log.d("TAG ", "signInWithCredential:onComplete:" + task.isSuccessful)
                         if (!task.isSuccessful) {
                             Log.w("TAG ", "signInWithCredential", task.exception)
-//                        Util.initToast(this@LoginActivity, "Authentication failed")
+                            showSnackbar(resources.getString(R.string.auth_failed))
                         } else {
                             startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                             finish()
@@ -128,7 +122,7 @@ class LoginActivity : AppCompatActivity(),
 
         } else {
             // Signed out, show unauthenticated UI.
-            //showSnackbar(resources.getString(R.string.login_failed))
+            showSnackbar(resources.getString(R.string.login_failed))
         }
     }
 
@@ -158,4 +152,14 @@ class LoginActivity : AppCompatActivity(),
 
 
     }
+
+
+    private fun showSnackbar(msg: String) {
+        val parentLayout = findViewById<View>(android.R.id.content)
+        Snackbar.make(parentLayout, msg, Snackbar.LENGTH_LONG)
+                .setAction(resources.getText(R.string.close)) { }
+                .setActionTextColor(resources.getColor(android.R.color.holo_red_light))
+                .show()
+    }
+
 }

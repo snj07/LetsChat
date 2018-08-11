@@ -49,18 +49,16 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
-    //Firebase and GoogleApiClient
     private var mFirebaseAuth: FirebaseAuth? = null
     private var mFirebaseUser: FirebaseUser? = null
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mFirebaseDatabaseReference: DatabaseReference? = null
-    internal var storage = FirebaseStorage.getInstance()
+    private var storage = FirebaseStorage.getInstance()
 
 
-    //CLass Model
+
     private var userModel: User? = null
 
-    //Views UI
     private var rvListMessage: RecyclerView? = null
     private var mLinearLayoutManager: LinearLayoutManager? = null
     private var btSendMessage: ImageView? = null
@@ -69,25 +67,19 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var contentRoot: View? = null
     private var emojIcon: EmojIconActions? = null
 
-    //File
     private var filePathImageCamera: java.io.File = java.io.File("demo")
 
-    var CHAT_REFERENCE = "message"
+    var  CHAT_REFERENCE = "message"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        if (!CheckNet.isOnline(this)) {
-//            Toast.ma(this, "No internet")
-            finish()
-        } else {
-            bindViews()
-            checkUserLog()
-            mGoogleApiClient = GoogleApiClient.Builder(this)
-                    .enableAutoManage(this, this)
-                    .addApi(Auth.GOOGLE_SIGN_IN_API)
-                    .build()
-        }
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+        bindViews()
+        checkUserLog()
+        mGoogleApiClient = GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -117,8 +109,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 if (place != null) {
                     val latLng = place?.latLng
                     val mapModel = com.snj.letschat.model.Map( "${latLng.latitude}", "${latLng.longitude}")
-                    Log.d("Lat: ","${latLng.latitude}")
-                    Log.d("Long: ","${latLng.longitude}")
                     val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = mapModel, file = null, id = null, messgage = null)
                     mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
                 } else {
@@ -136,7 +126,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-        when (item.getItemId()) {
+        when (item.itemId) {
             R.id.sendPhoto -> verifyStoragePermissions()
             R.id.sendPhotoGallery -> photoGalleryIntent()
             R.id.sendLocation -> locationPlacesIntent()
@@ -220,22 +210,34 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     private fun sendFileFirebase(storageReference: StorageReference?, file: java.io.File) {
         if (storageReference != null) {
-            val photoURI = FileProvider.getUriForFile(this@MainActivity,
-                    BuildConfig.APPLICATION_ID + ".provider",
+            val photoURI = FileProvider.getUriForFile(applicationContext,
+                    "ibas.provider",
                     file)
-            val uploadTask = storageReference!!.putFile(photoURI)
-            uploadTask.addOnFailureListener(OnFailureListener { e -> Log.e(TAG, "onFailure sendFileFirebase " + e.message) })
-                    .addOnSuccessListener {
-                        OnSuccessListener<UploadTask.TaskSnapshot> { snapshot ->
-                            Log.i(TAG, "onSuccess sendFileFirebase")
-                            val downloadUrl = snapshot.storage.downloadUrl
-                            val fileModel = File(type = "img", url = downloadUrl.toString(), name = file.name, size = "${file.length()}")
-                            val chatModel = Message(user = userModel, id = "", messgage = "", timeStamp = "${Calendar.getInstance().getTime().getTime()}", file = fileModel, map = null)
-                            mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
-                            Log.d("File..", fileModel.toString())
-                        }
+            val name = DateFormat.format("yyyy-MM-dd_hhmmss", Date()).toString()
+            val imageGalleryRef = storageReference?.child(name + "_camera")
+            Log.e("Upload..", "Asyntask...")
+            val uploadTask = imageGalleryRef.putFile(photoURI)
+            uploadTask.addOnFailureListener({ e ->
+                Log.e("Upload fail", "onFailure sendFileFirebase " + e.message)
+            }).addOnCompleteListener(
+                    object : OnCompleteListener<UploadTask.TaskSnapshot> {
+                        override fun onComplete(p0: Task<UploadTask.TaskSnapshot>) {
+                            imageGalleryRef.downloadUrl.addOnSuccessListener { e ->
+                                run {
+                                    Log.e("Upload..", "onSuccess sendFileFirebase")
+                                    val fileModel = File("img", e.toString(), name, "")
+                                    val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = null, file = fileModel, id = null, messgage = null)
+                                    mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
+                                    Log.d("File..", fileModel.toString())
+                                }
 
+
+                            }
+
+                        }
                     }
+
+            )
         } else {
             //IS NULL
         }
@@ -260,7 +262,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         filePathImageCamera = java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), nomeFoto + "camera.jpg")
         val it = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         val photoURI = FileProvider.getUriForFile(this@MainActivity,
-                BuildConfig.APPLICATION_ID + ".provider",
+                "ibas.provider",
                 filePathImageCamera!!)
         it.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
         startActivityForResult(it, IMAGE_CAMERA_REQUEST)
@@ -282,7 +284,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
 
     private fun readMessagensFirebase() {
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().reference
+
+        mFirebaseDatabaseReference =  FirebaseDatabase.getInstance().reference
+        mFirebaseDatabaseReference?.keepSynced(true)
         var options: FirebaseRecyclerOptions<Message> =
                 FirebaseRecyclerOptions.Builder<Message>()
                         .setIndexedQuery(mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).orderByKey(), mFirebaseDatabaseReference!!.child(CHAT_REFERENCE), Message::class.java)

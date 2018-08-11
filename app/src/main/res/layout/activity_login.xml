@@ -20,15 +20,11 @@
         android:layout_marginBottom="20dp"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/welcome"
+    <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:text="@string/welcome"
-        android:textColor="#FFF"
-        android:textSize="60sp" />
-
+        android:fitsSystemWindows="true"
+        android:layout_height="200dp"
+        android:src="@mipmap/firebase" />
 
 
     <LinearLayout
@@ -39,27 +35,40 @@
         android:orientation="vertical">
 
 
-
         <Button
             android:id="@+id/gmail_signin_button2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_above="@+id/facebook_login_button"
+            android:layout_alignParentStart="true"
             android:layout_marginBottom="5dp"
             android:background="@drawable/round_button"
-            android:drawableStart="@mipmap/ic_launcher"
+            android:drawableStart="@mipmap/ic_gplus"
             android:elevation="15dp"
             android:foregroundGravity="bottom"
             android:padding="5dp"
             android:text="@string/continue_with_google"
             android:textAllCaps="false"
-            android:textColor="#bbc"
             android:textSize="13sp"
-            android:textStyle="bold"
-            android:drawableLeft="@mipmap/ic_launcher" />
+            android:textStyle="bold" />
 
 
-
+        <Button
+            android:id="@+id/facebook_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/facebook_login_button"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/round_button"
+            android:drawableStart="@mipmap/ic_fb"
+            android:elevation="15dp"
+            android:foregroundGravity="bottom"
+            android:padding="5dp"
+            android:text="@string/continue_with_facebook"
+            android:textAllCaps="false"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
 
     </LinearLayout>
