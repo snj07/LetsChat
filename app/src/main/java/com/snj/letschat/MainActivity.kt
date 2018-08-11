@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             finish()
         } else {
             bindViews()
-            verificaUsuarioLogado()
+            checkUserLog()
             mGoogleApiClient = GoogleApiClient.Builder(this)
                     .enableAutoManage(this, this)
                     .addApi(Auth.GOOGLE_SIGN_IN_API)
@@ -116,7 +116,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 val place = PlacePicker.getPlace(this, data)
                 if (place != null) {
                     val latLng = place?.latLng
-                    val mapModel = com.snj.letschat.model.Map(latitude = "$latLng.latitude", longitude = "$latLng.longitude")
+                    val mapModel = com.snj.letschat.model.Map( "${latLng.latitude}", "${latLng.longitude}")
+                    Log.d("Lat: ","${latLng.latitude}")
+                    Log.d("Long: ","${latLng.longitude}")
                     val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = mapModel, file = null, id = null, messgage = null)
                     mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
                 } else {
@@ -279,7 +281,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
 
-    private fun lerMessagensFirebase() {
+    private fun readMessagensFirebase() {
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().reference
         var options: FirebaseRecyclerOptions<Message> =
                 FirebaseRecyclerOptions.Builder<Message>()
@@ -303,7 +305,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
 
-    private fun verificaUsuarioLogado() {
+    private fun checkUserLog() {
         mFirebaseAuth = FirebaseAuth.getInstance()
         mFirebaseUser = mFirebaseAuth!!.currentUser
         Log.d("user--", mFirebaseUser.toString())
@@ -312,7 +314,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             finish()
         } else {
             userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString(),mFirebaseUser?.email)
-            lerMessagensFirebase()
+            readMessagensFirebase()
         }
     }
 
