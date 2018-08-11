@@ -1,11 +1,8 @@
 package com.snj.letschat
 
-import android.app.ProgressDialog
 import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.ImageView
-import android.widget.TextView
 import com.facebook.drawee.backends.pipeline.Fresco
 import kotlinx.android.synthetic.main.activity_full_screen.*
 

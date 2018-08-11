@@ -3,6 +3,7 @@ package com.snj.letschat
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
@@ -27,8 +28,6 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.places.ui.PlacePicker
 import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -41,9 +40,9 @@ import com.snj.letschat.adapter.ChatFirebaseRecycleAdapter
 import com.snj.letschat.model.File
 import com.snj.letschat.model.Message
 import com.snj.letschat.model.User
-import com.snj.letschat.utils.CheckNet
 import hani.momanii.supernova_emoji_library.Actions.EmojIconActions
 import hani.momanii.supernova_emoji_library.Helper.EmojiconEditText
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 
@@ -54,7 +53,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mFirebaseDatabaseReference: DatabaseReference? = null
     private var storage = FirebaseStorage.getInstance()
-
 
 
     private var userModel: User? = null
@@ -69,7 +67,22 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     private var filePathImageCamera: java.io.File = java.io.File("demo")
 
-    var  CHAT_REFERENCE = "message"
+
+
+
+    companion object {
+
+        private const val IMAGE_GALLERY_REQUEST = 1
+        private const val IMAGE_CAMERA_REQUEST = 2
+        private const val PLACE_PICKER_REQUEST = 3
+
+        val TAG =  "${MainActivity::class.java.name}"
+        const val CHAT_REFERENCE = "message"
+
+        // Storage Permissions
+        private const val REQUEST_EXTERNAL_STORAGE = 1
+        private val PERMISSIONS_STORAGE = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -108,7 +121,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 val place = PlacePicker.getPlace(this, data)
                 if (place != null) {
                     val latLng = place?.latLng
-                    val mapModel = com.snj.letschat.model.Map( "${latLng.latitude}", "${latLng.longitude}")
+                    val mapModel = com.snj.letschat.model.Map("${latLng.latitude}", "${latLng.longitude}")
                     val chatModel = Message(user = userModel, timeStamp = "${Calendar.getInstance().time}", map = mapModel, file = null, id = null, messgage = null)
                     mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(chatModel)
                 } else {
@@ -148,21 +161,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         }
     }
 
-    fun clickImageChat(view: View, position: Int, nameUser: String, urlPhotoUser: String, urlPhotoClick: String) {
-        // val intent = Intent(this, FullScreenImageActivity::class.java)
-        //intent.putExtra("nameUser", nameUser)
-        //intent.putExtra("urlPhotoUser", urlPhotoUser)
-        // intent.putExtra("urlPhotoClick", urlPhotoClick)
-        //startActivity(intent)
-    }
-
-    fun clickImageMapChat(view: View, position: Int, latitude: String, longitude: String) {
-        val uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude, longitude, latitude, longitude)
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
-        startActivity(intent)
-    }
-
-
     private fun sendFileFirebase(storageReference: StorageReference?, file: Uri) {
         if (storageReference != null) {
             val name = DateFormat.format("yyyy-MM-dd_hhmmss", Date()).toString()
@@ -197,16 +195,16 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     }
 
-    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
-        init {
-            execute()
-        }
-
-        override fun doInBackground(vararg params: Void?): Void? {
-            handler()
-            return null
-        }
-    }
+//    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
+//        init {
+//            execute()
+//        }
+//
+//        override fun doInBackground(vararg params: Void?): Void? {
+//            handler()
+//            return null
+//        }
+//    }
 
     private fun sendFileFirebase(storageReference: StorageReference?, file: java.io.File) {
         if (storageReference != null) {
@@ -214,9 +212,13 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                     "ibas.provider",
                     file)
             val name = DateFormat.format("yyyy-MM-dd_hhmmss", Date()).toString()
-            val imageGalleryRef = storageReference?.child(name + "_camera")
+            val imageGalleryRef = storageReference?.child(name)
+            var bmp: Bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), photoURI)
+            var baos: ByteArrayOutputStream = ByteArrayOutputStream()
+            bmp.compress(Bitmap.CompressFormat.JPEG, 25, baos)
+            var data = baos.toByteArray()
             Log.e("Upload..", "Asyntask...")
-            val uploadTask = imageGalleryRef.putFile(photoURI)
+            val uploadTask = imageGalleryRef.putBytes(data)
             uploadTask.addOnFailureListener({ e ->
                 Log.e("Upload fail", "onFailure sendFileFirebase " + e.message)
             }).addOnCompleteListener(
@@ -285,7 +287,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     private fun readMessagensFirebase() {
 
-        mFirebaseDatabaseReference =  FirebaseDatabase.getInstance().reference
+        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().reference
         mFirebaseDatabaseReference?.keepSynced(true)
         var options: FirebaseRecyclerOptions<Message> =
                 FirebaseRecyclerOptions.Builder<Message>()
@@ -293,7 +295,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 //                        .setQuery(teamQuery, Message::class.java)
                         .setLifecycleOwner(this)
                         .build()
-        val firebaseAdapter = ChatFirebaseRecycleAdapter(this, options,  userModel!!.email!!,userModel!!.name!!)
+        val firebaseAdapter = ChatFirebaseRecycleAdapter(this, options, userModel!!.email!!, userModel!!.name!!)
         firebaseAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 super.onItemRangeInserted(positionStart, itemCount)
@@ -317,7 +319,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
-            userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString(),mFirebaseUser?.email)
+            userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString(), mFirebaseUser?.email)
             readMessagensFirebase()
         }
     }
@@ -342,13 +344,8 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         finish()
     }
 
-    /**
-     * Checks if the app has permission to write to device storage
-     *
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     */
-    fun verifyStoragePermissions() {
+
+    private fun verifyStoragePermissions() {
         // Check if we have write permission
         val permission = ActivityCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
@@ -370,24 +367,12 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         when (requestCode) {
             REQUEST_EXTERNAL_STORAGE ->
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
                     photoCameraIntent()
                 }
         }
     }
 
-    companion object {
 
-        private val IMAGE_GALLERY_REQUEST = 1
-        private val IMAGE_CAMERA_REQUEST = 2
-        private val PLACE_PICKER_REQUEST = 3
-
-        internal val TAG = MainActivity::class.java.simpleName
-        internal val CHAT_REFERENCE = "chatmodel"
-
-        // Storage Permissions
-        private val REQUEST_EXTERNAL_STORAGE = 1
-        private val PERMISSIONS_STORAGE = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    }
 }
