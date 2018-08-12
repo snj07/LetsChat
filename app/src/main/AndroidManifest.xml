@@ -35,14 +35,14 @@
             android:value="@string/api_key_google_places" />
 
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
+        <activity android:name=".MainActivity" />
         <activity android:name=".FullScreenActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             />

@@ -89,15 +89,25 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
-        bindViews()
-        checkUserLog()
+
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
                 .build()
+        mGoogleApiClient?.connect()
+        bindViews()
+        checkUserLog()
+
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (!mGoogleApiClient?.isConnected!!) {
+            mGoogleApiClient?.connect()
+        }
+
+
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         val storageRef = storage.getReferenceFromUrl(STORAGE_PATH).child(STORAGE_FOLDER)
@@ -168,7 +178,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         if (storageReference != null) {
             val name = DateFormat.format("yyyy-MM-dd_hhmmss", Date()).toString()
             val imageGalleryRef = storageReference?.child(name + "_gallery")
-            Log.e("Upload..", "Asyntask...")
+
             val uploadTask = imageGalleryRef.putFile(file)
             uploadTask.addOnFailureListener({ e ->
                 Log.e("Upload fail", "onFailure sendFileFirebase " + e.message)
@@ -309,7 +319,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 }
             }
         })
-        mLinearLayoutManager?.stackFromEnd=true
+//        mLinearLayoutManager?.stackFromEnd=true
         msgListRecyclerView!!.layoutManager = mLinearLayoutManager
         msgListRecyclerView!!.adapter = firebaseAdapter
 
@@ -338,8 +348,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private fun checkUserLog() {
         mFirebaseAuth = FirebaseAuth.getInstance()
         mFirebaseUser = mFirebaseAuth!!.currentUser
-        Log.d(TAG, mFirebaseUser.toString())
+        Log.d("$TAG FirebaseUser", mFirebaseUser.toString())
         if (mFirebaseUser == null) {
+            signOut()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
@@ -362,8 +373,10 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
     private fun signOut() {
-        mFirebaseAuth!!.signOut()
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient)
+//        FirebaseAuth.getInstance().signOut()
+
+
+
         SharedPrefConfigUtils.clear(this )
         startActivity(Intent(this, LoginActivity::class.java))
         finish()

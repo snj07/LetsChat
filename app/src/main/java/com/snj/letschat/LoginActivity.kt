@@ -1,6 +1,7 @@
 package com.snj.letschat
 
 import android.content.Intent
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -11,11 +12,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResultCallback
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.FirebaseDatabase
 import com.snj.letschat.utils.CheckNet
 import com.snj.letschat.utils.SharedPrefConfigUtils
 import kotlinx.android.synthetic.main.activity_login.*
@@ -27,33 +32,76 @@ class LoginActivity : AppCompatActivity(),
     override fun onConnectionFailed(p0: ConnectionResult) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
     companion object {
-        const val RC_SIGN_IN : Int = 9001
+        const val RC_SIGN_IN: Int = 9001
         val TAG: String = "${LoginActivity::class.java.name}"
+
+        init {
+            //here goes static initializer code
+            FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+        }
     }
 
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mAuth: FirebaseAuth? = null
 
 
-//    var mCallbackManager: CallbackManager? = null
+    //    var mCallbackManager: CallbackManager? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         FirebaseApp.initializeApp(this)
-        super.onCreate(savedInstanceState)
         FirebaseAuth.getInstance().signOut()
+
+        super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_login)
+
 
         val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().requestIdToken(getString(R.string.default_web_client_id)).build()
         mGoogleApiClient = GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions).build()
-        mGoogleApiClient?.connect()
+
 
         mAuth = FirebaseAuth.getInstance()
 
+
+        if (SharedPrefConfigUtils.getUserEmailId(this) != "") {
+            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+            finish()
+        }
+
+
+//        Auth.GoogleSignInApi.signOut(mGoogleApiClient)
         gmail_signin_button2?.setOnClickListener(View.OnClickListener {
             submit()
         })
 
+    }
+
+    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
+        init {
+            execute()
+        }
+        override fun doInBackground(vararg params: Void?): Void? {
+            handler()
+            return null
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+//        mGoogleApiClient?.connect()
+        doAsync {
+            mGoogleApiClient?.blockingConnect()
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(object : ResultCallback<Status> {
+                override fun onResult(status: Status) {
+                    mAuth?.signOut()
+
+                }
+
+            })
+        }
     }
 
     private fun submit() {
@@ -62,6 +110,11 @@ class LoginActivity : AppCompatActivity(),
         } else {
             showSnackbar(resources.getString(R.string.no_internet))
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mGoogleApiClient?.disconnect()
     }
 
     private fun signIn() {
@@ -105,17 +158,25 @@ class LoginActivity : AppCompatActivity(),
             if (acct.photoUrl != null)
                 personPhotoUrl = acct.photoUrl!!.toString()
             val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
-            Log.d("token", acct.idToken)
+            Log.d("$TAG token", acct.idToken)
             mAuth!!.signInWithCredential(credential)
-                    .addOnCompleteListener(this, OnCompleteListener<AuthResult> { task ->
-                        Log.d("TAG ", "signInWithCredential:onComplete:" + task.isSuccessful)
-                        if (!task.isSuccessful) {
-                            Log.w("TAG ", "signInWithCredential", task.exception)
+                    .addOnCompleteListener(this,
+                            object : OnCompleteListener<AuthResult> {
+                                override fun onComplete(p0: Task<AuthResult>) {
+                                    Log.d(TAG, "signInWithCredential:onComplete: " + p0.result.user.displayName)
+                                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                                    finish()
+                                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                                }
+
+                            }
+
+                    ).addOnFailureListener(this, { task ->
+                        run {
+                            Log.w(TAG, "signInWithCredential $task")
                             showSnackbar(resources.getString(R.string.auth_failed))
-                        } else {
-                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                            finish()
                         }
+
                     })
             handleSignInResult(name, email, personPhotoUrl)
 
