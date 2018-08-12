@@ -126,7 +126,7 @@ class LoginActivity : AppCompatActivity(),
         }
     }
 
-    internal fun handleSignInResult(personName: String?, email: String?, personPhotoUrl: String) {
+    private fun handleSignInResult(personName: String?, email: String?, personPhotoUrl: String) {
 
         //Log.e(TAG, "Name: " + personName + ", email: " + email
         //      + ", Image: " + personPhotoUrl)

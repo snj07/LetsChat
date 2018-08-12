@@ -40,6 +40,7 @@ import com.snj.letschat.adapter.ChatFirebaseRecycleAdapter
 import com.snj.letschat.model.File
 import com.snj.letschat.model.Message
 import com.snj.letschat.model.User
+import com.snj.letschat.utils.SharedPrefConfigUtils
 import hani.momanii.supernova_emoji_library.Actions.EmojIconActions
 import hani.momanii.supernova_emoji_library.Helper.EmojiconEditText
 import java.io.ByteArrayOutputStream
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     private var userModel: User? = null
 
-    private var rvListMessage: RecyclerView? = null
+    private var msgListRecyclerView: RecyclerView? = null
     private var mLinearLayoutManager: LinearLayoutManager? = null
     private var btSendMessage: ImageView? = null
     private var btEmoji: ImageView? = null
@@ -68,16 +69,18 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private var filePathImageCamera: java.io.File = java.io.File("demo")
 
 
-
-
     companion object {
+
+        const val CHAT_REFERENCE = "message"
+        const val STORAGE_PATH = "gs://friendlychat-ee637.appspot.com"
+        const val STORAGE_FOLDER = "images"
+
 
         private const val IMAGE_GALLERY_REQUEST = 1
         private const val IMAGE_CAMERA_REQUEST = 2
         private const val PLACE_PICKER_REQUEST = 3
 
         val TAG =  "${MainActivity::class.java.name}"
-        const val CHAT_REFERENCE = "message"
 
         // Storage Permissions
         private const val REQUEST_EXTERNAL_STORAGE = 1
@@ -97,7 +100,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        val storageRef = storage.getReferenceFromUrl("gs://friendlychat-ee637.appspot.com").child("images")
+        val storageRef = storage.getReferenceFromUrl(STORAGE_PATH).child(STORAGE_FOLDER)
         if (requestCode == IMAGE_GALLERY_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 val selectedImageUri = data!!.data
@@ -279,13 +282,13 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
 
     private fun sendMessageFirebase() {
-        val model = Message(user = userModel, messgage = edMessage!!.text.toString(), timeStamp = "${Calendar.getInstance().getTime().getTime()}", file = null, id = null, map = null)
+        val model = Message(user = userModel, messgage = edMessage!!.text.toString(), timeStamp = "${Calendar.getInstance().time}", file = null, id = null, map = null)
         mFirebaseDatabaseReference!!.child(CHAT_REFERENCE).push().setValue(model)
         edMessage!!.setText("")
     }
 
 
-    private fun readMessagensFirebase() {
+    private fun readMessageFirebase() {
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().reference
         mFirebaseDatabaseReference?.keepSynced(true)
@@ -302,25 +305,46 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 val friendlyMessageCount = firebaseAdapter.itemCount
                 val lastVisiblePosition = mLinearLayoutManager!!.findLastCompletelyVisibleItemPosition()
                 if (lastVisiblePosition == -1 || positionStart >= friendlyMessageCount - 1 && lastVisiblePosition == positionStart - 1) {
-                    rvListMessage!!.scrollToPosition(positionStart)
+                    msgListRecyclerView!!.scrollToPosition(positionStart)
                 }
             }
         })
-        rvListMessage!!.layoutManager = mLinearLayoutManager
-        rvListMessage!!.adapter = firebaseAdapter
+        mLinearLayoutManager?.stackFromEnd=true
+        msgListRecyclerView!!.layoutManager = mLinearLayoutManager
+        msgListRecyclerView!!.adapter = firebaseAdapter
+
+        firebaseAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                val friendlyMessageCount = firebaseAdapter.itemCount
+                val lastVisiblePosition = mLinearLayoutManager!!.findLastCompletelyVisibleItemPosition()
+                // If the recycler view is initially being loaded or the
+                // user is at the bottom of the list, scroll to the bottom
+                // of the list to show the newly added message.
+                msgListRecyclerView?.post(Runnable { msgListRecyclerView?.smoothScrollToPosition(firebaseAdapter.itemCount - 1) })
+
+                if (lastVisiblePosition == -1 || positionStart >= friendlyMessageCount - 1 && lastVisiblePosition == positionStart - 1) {
+
+                }
+            }
+        })
+
+
+
     }
 
 
     private fun checkUserLog() {
         mFirebaseAuth = FirebaseAuth.getInstance()
         mFirebaseUser = mFirebaseAuth!!.currentUser
-        Log.d("user--", mFirebaseUser.toString())
+        Log.d(TAG, mFirebaseUser.toString())
         if (mFirebaseUser == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
             userModel = User(mFirebaseUser!!.uid, mFirebaseUser!!.displayName, mFirebaseUser!!.photoUrl!!.toString(), mFirebaseUser?.email)
-            readMessagensFirebase()
+            readMessageFirebase()
         }
     }
 
@@ -332,7 +356,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         btEmoji = findViewById<View>(R.id.buttonEmoji) as ImageView
         emojIcon = EmojIconActions(this, contentRoot, edMessage, btEmoji)
         emojIcon!!.ShowEmojIcon()
-        rvListMessage = findViewById<View>(R.id.messageRecyclerView) as RecyclerView?
+        msgListRecyclerView = findViewById<View>(R.id.messageRecyclerView) as RecyclerView?
         mLinearLayoutManager = LinearLayoutManager(this)
         mLinearLayoutManager!!.stackFromEnd = true
     }
@@ -340,6 +364,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     private fun signOut() {
         mFirebaseAuth!!.signOut()
         Auth.GoogleSignInApi.signOut(mGoogleApiClient)
+        SharedPrefConfigUtils.clear(this )
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }
@@ -350,14 +375,14 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
         val permission = ActivityCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
+            //No permission
             ActivityCompat.requestPermissions(
                     this@MainActivity,
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             )
         } else {
-            // we already have permission, lets go ahead and call camera intent
+            // permission given
             photoCameraIntent()
         }
     }

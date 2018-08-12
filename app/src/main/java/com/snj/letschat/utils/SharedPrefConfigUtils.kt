@@ -26,5 +26,10 @@ class SharedPrefConfigUtils {
         fun getSharedPreference(context: Context): SharedPreferences {
             return context.getSharedPreferences(MY_PREFERENCES, Context.MODE_PRIVATE)
         }
+        fun clear(context: Context) {
+            var editor = getSharedPreference(context).edit()
+            editor.clear()
+            editor.commit()
+        }
     }
 }

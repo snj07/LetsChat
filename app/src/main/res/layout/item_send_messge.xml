@@ -41,7 +41,7 @@
             android:gravity="center|bottom"
             android:textSize="18sp"
             android:paddingTop="4dp"
-            android:text="Alessandr sdlsdklsd \n slkdlskdlks \nsdlkslkds dsdso"
+            android:text="message"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="#fff"
             android:textIsSelectable="true"

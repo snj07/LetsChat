@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:emojicon="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -35,8 +33,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textIsSelectable="true"
-            android:text="Alessandr sdlsdklsd \n slkdlskdlks \nsdlkslkds dsdso"
-            emojicon:emojiconSize="28sp"
+            android:text="message"
+            emojicon:emojiconSize="24sp"
+            android:foregroundGravity="center|bottom"
+            android:textSize="18sp"
+            android:paddingTop="4dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
     </me.himanshusoni.chatmessageview.ChatMessageView>

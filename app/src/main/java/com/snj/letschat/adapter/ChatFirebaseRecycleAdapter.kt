@@ -22,14 +22,17 @@ import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView
 
 class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebaseRecycleAdapter.ChatViewHolder>{
 
+    companion object {
+        const val SEND_MSG = 0
+        const  val RECV_MSG = 1
+        const val SEND_IMG_MSG = 2
+        const val RECV_IMG_MSG = 3
+
+    }
 
 
-    val SEND_MSG = 0
-    val RECV_MSG = 1
-    val SEND_IMG_MSG = 2
-    val RECV_IMG_MSG = 3
-    var userName: String
-    var email: String
+    private var userName: String
+    private var email: String
     var context: Context
 
     constructor(context: Context, fbRecycleOption: FirebaseRecyclerOptions<Message>, email: String, username: String) : super(fbRecycleOption) {
@@ -37,6 +40,8 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
         this.email = email
         this.context = context
     }
+
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
         Log.d("ViewType", "$viewType--")
@@ -90,7 +95,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
         }
     }
 
-    fun local(latitudeFinal: String, longitudeFinal: String): String {
+    private fun local(latitudeFinal: String, longitudeFinal: String): String {
         return "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeFinal,$longitudeFinal&zoom=18&size=280x280&markers=color:red|$latitudeFinal,$longitudeFinal"
     }
 
@@ -99,9 +104,9 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             val position = adapterPosition
             val model = getItem(position)
             if (model.map != null) {
-                clickImageMapChat(position, model.map?.latitude!!, model.map?.longitude!!)
+                clickImageMapChat(model.map?.latitude!!, model.map?.longitude!!)
             } else {
-                clickImageChat(position, model.user?.name!!, model.user.photo!!, model.file!!.url)
+                clickImageChat(model.file!!.url)
             }
         }
 
@@ -124,7 +129,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             //  Glide.with(ivUser.context).load(urlPhotoUser).centerCrop().transform(CircleTransform(ivUser.context)).override(40, 40).into(ivUser)
             Glide.with(context)
                     .load(urlPhotoUser)
-                    .apply(RequestOptions().centerCrop())
+                    .apply(RequestOptions().circleCrop() )
                     .into(ivUser!!)
         }
 
@@ -137,16 +142,14 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
             ivChatPhoto!!.setOnClickListener(this)
         }
 
-        fun clickImageMapChat(position: Int, latitude: String, longitude: String) {
+        private fun clickImageMapChat( latitude: String, longitude: String) {
             val uri = String.format("geo:%s,%s?z=17&q=%s,%s", latitude, longitude, latitude, longitude)
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
             context.startActivity(intent)
         }
 
-        fun clickImageChat(position: Int, nameUser: String, urlPhotoUser: String, urlPhotoClick: String) {
+        private fun clickImageChat( urlPhotoClick: String) {
             val intent = Intent(context, FullScreenActivity::class.java)
-            intent.putExtra("nameUser", nameUser)
-            intent.putExtra("urlPhotoUser", urlPhotoUser)
             intent.putExtra("urlPhotoClick", urlPhotoClick)
             context.startActivity(intent)
         }
