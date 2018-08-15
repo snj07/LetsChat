@@ -160,25 +160,27 @@ class LoginActivity : AppCompatActivity(),
             val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
             Log.d("$TAG token", acct.idToken)
             mAuth!!.signInWithCredential(credential)
-                    .addOnCompleteListener(this,
-                            object : OnCompleteListener<AuthResult> {
-                                override fun onComplete(p0: Task<AuthResult>) {
-                                    Log.d(TAG, "signInWithCredential:onComplete: " + p0.result.user.displayName)
-                                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                                    finish()
-                                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                                }
 
+                    .addOnCompleteListener(this, { task ->
+                        run {
+                            if(task.isSuccessful){
+                                Log.d(TAG, "signInWithCredential:onComplete: " + task.result.user.displayName)
+                                handleSignInResult(name, email, personPhotoUrl)
+                            }else{
+                                Log.w(TAG, "signInWithCredential", task.exception)
+                                showSnackbar("Authentication failed!");
                             }
+                        }
 
-                    ).addOnFailureListener(this, { task ->
+                    })
+                  .addOnFailureListener(this, { task ->
                         run {
                             Log.w(TAG, "signInWithCredential $task")
                             showSnackbar(resources.getString(R.string.auth_failed))
                         }
 
                     })
-            handleSignInResult(name, email, personPhotoUrl)
+
 
 
         } else {
