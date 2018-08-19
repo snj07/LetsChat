@@ -43,10 +43,6 @@ class LoginActivity : AppCompatActivity(),
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mAuth: FirebaseAuth? = null
 
-
-    //    var mCallbackManager: CallbackManager? = null
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         FirebaseApp.initializeApp(this)
         FirebaseAuth.getInstance().signOut()
@@ -72,6 +68,9 @@ class LoginActivity : AppCompatActivity(),
 //        Auth.GoogleSignInApi.signOut(mGoogleApiClient)
         gmail_signin_button2?.setOnClickListener(View.OnClickListener {
             submit()
+        })
+        facebook_button.setOnClickListener(View.OnClickListener {
+            showSnackbar("Facebook login is not implemented!! Check TechNews Project on my github")
         })
 
     }

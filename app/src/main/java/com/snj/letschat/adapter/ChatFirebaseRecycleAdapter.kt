@@ -24,7 +24,7 @@ class ChatFirebaseRecycleAdapter : FirebaseRecyclerAdapter<Message, ChatFirebase
 
     companion object {
         const val SEND_MSG = 0
-        const  val RECV_MSG = 1
+        const val RECV_MSG = 1
         const val SEND_IMG_MSG = 2
         const val RECV_IMG_MSG = 3
 
