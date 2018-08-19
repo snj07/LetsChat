@@ -14,10 +14,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResultCallback
 import com.google.android.gms.common.api.Status
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
@@ -191,19 +188,8 @@ class LoginActivity : AppCompatActivity(),
 
     private fun handleSignInResult(personName: String?, email: String?, personPhotoUrl: String) {
 
-        //Log.e(TAG, "Name: " + personName + ", email: " + email
-        //      + ", Image: " + personPhotoUrl)
-        //val user = User()
-        //user.setUsername(personName)
-        //user.setEmail(email)
-        //user.setImage_url(personPhotoUrl)
-        //user.setPassword("")
-
-        //appDatabase = AppDatabaseSingleton.getInstance(this)
         var et = SharedPrefConfigUtils.getSharedPreference(this).edit()
 
-
-        //et.putLong(SharedPrefConfigUtils.USER_ID, user1[0].getUid())
         et.putString(SharedPrefConfigUtils.USER_NAME, personName)
         et.putString(SharedPrefConfigUtils.USER_EMAIL, email)
         et.putString(SharedPrefConfigUtils.USER_IMAGE, personPhotoUrl)

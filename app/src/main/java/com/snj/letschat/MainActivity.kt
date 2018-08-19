@@ -164,7 +164,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     override fun onConnectionFailed(connectionResult: ConnectionResult) {
         Log.d(TAG, "onConnectionFailed:$connectionResult")
-        // Util.initToast(this, "Google Play Services error.")
     }
 
 
@@ -319,7 +318,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 }
             }
         })
-//        mLinearLayoutManager?.stackFromEnd=true
+
         msgListRecyclerView!!.layoutManager = mLinearLayoutManager
         msgListRecyclerView!!.adapter = firebaseAdapter
 
@@ -373,10 +372,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
     }
 
     private fun signOut() {
-//        FirebaseAuth.getInstance().signOut()
-
-
-
         SharedPrefConfigUtils.clear(this )
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
@@ -411,6 +406,4 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
                 }
         }
     }
-
-
 }
