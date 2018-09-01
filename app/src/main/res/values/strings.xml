@@ -7,7 +7,7 @@
     <string name="sendPhotoGallery">Send Photo Gallery</string>
     <string name="sendLocation">Send Location</string>
     <string name="sign_out">Signout</string>
-    <string name="api_key_google_places">KEY</string>
+    <string name="api_key_google_places">AIzaSyA7q1bzQ0rja5K7OEpsjYt5ipzKSpAUy78</string>
     <string name="continue_with_facebook">Continue with facebook</string>
     <string name="close">Close</string>
     <string name="auth_failed">Authentication failed</string>

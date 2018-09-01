@@ -207,17 +207,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
     }
 
-//    class doAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
-//        init {
-//            execute()
-//        }
-//
-//        override fun doInBackground(vararg params: Void?): Void? {
-//            handler()
-//            return null
-//        }
-//    }
-
     private fun sendFileFirebase(storageReference: StorageReference?, file: java.io.File) {
         if (storageReference != null) {
             val photoURI = FileProvider.getUriForFile(applicationContext,
@@ -253,7 +242,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.OnConnectionFailedList
 
             )
         } else {
-            //IS NULL
+            Log.d(TAG,"Storage ref is null!")
         }
 
     }
