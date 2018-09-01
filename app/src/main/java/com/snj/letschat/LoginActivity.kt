@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity(),
         GoogleApiClient.OnConnectionFailedListener {
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        showSnackbar("Failed to connect!!")
     }
 
     companion object {
@@ -157,7 +157,7 @@ class LoginActivity : AppCompatActivity(),
             Log.d("$TAG token", acct.idToken)
             mAuth!!.signInWithCredential(credential)
 
-                    .addOnCompleteListener(this, { task ->
+                    .addOnCompleteListener(this) { task ->
                         run {
                             if(task.isSuccessful){
                                 Log.d(TAG, "signInWithCredential:onComplete: " + task.result.user.displayName)
@@ -168,15 +168,14 @@ class LoginActivity : AppCompatActivity(),
                             }
                         }
 
-                    })
-                  .addOnFailureListener(this, { task ->
+                    }
+                    .addOnFailureListener(this) { task ->
                         run {
                             Log.w(TAG, "signInWithCredential $task")
                             showSnackbar(resources.getString(R.string.auth_failed))
                         }
 
-                    })
-
+                    }
 
 
         } else {
